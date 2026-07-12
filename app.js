@@ -316,7 +316,6 @@ function backupRecord(key, url) {
     uiDueDate: value("uiDueDate"),
     onlineDate: value("onlineDate"),
     requestSummary: value("summary"),
-    outputItems: outputItemsText(),
     scenarioDetail: scenarioDescription(),
     assetLink: value("assetLink"),
     figmaLink: value("figmaLink"),
