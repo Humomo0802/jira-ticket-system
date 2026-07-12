@@ -1,14 +1,6 @@
 const scenarioConfigs = {
   "直播間素材": {
-    fields: [
-      ["activityName", "活動名稱", "input", "例如：樂享首單包賠"],
-      ["activityPeriod", "活動期間", "input", "例如：06/13 - 06/14"],
-      ["mainTitle", "主標題", "input", "活動主標"],
-      ["subTitle", "副標題", "input", "活動副標"],
-      ["copy", "活動文案", "textarea", "請貼上要放進素材的文案"],
-      ["rules", "活動規則", "textarea", "參與方式、限制、派獎規則"],
-      ["rewards", "獎勵內容", "textarea", "獎項、金額、名額"]
-    ],
+    fields: [],
     checks: ["Banner", "浮窗", "活動彈窗", "直播間活動圖片", "其他"]
   },
   "代理": {
@@ -435,21 +427,6 @@ function fillSample() {
   });
 
   renderScenarioFields();
-  const detailSample = {
-    activityName: "0704-05樂享-首單包賠",
-    activityPeriod: "2026-07-04 18:30 韓K聯 全北現代 - 江原FC\n2026-07-05 19:35 中超 上海申花 - 浙江隊",
-    mainTitle: "你投注我買單 x 包賠100%",
-    subTitle: "專屬稱號、流水返券、現金紅包",
-    copy: "活動內容：\n限本場賽事，當日累計充值≥100且首單有效投注≥100，會員根據首單投注的負盈利可獲得100元的包賠彩金。\n\n活動流程：\n進入直播間 → 點擊左邊活動浮標 → 點擊【我要報名】，進線找客服登記。",
-    rules: "1. 活動僅限BB體育，當日累計充值≥100且首單有效投注≥100，負盈利僅對首單已結算並產生全輸結果來進行計算。\n2. 串關、對沖、提前結算、港賠0.75 / 歐賠1.75以下的首單投注將不列入活動計算。\n3. 獎勵於比賽結束48小時內審核派發，取款僅需3倍流水。\n4. 每位用戶僅限一個帳號參與本次活動，並只限領取一次獎勵。\n5. 為避免理解差異，平台保留本活動最終解釋權。",
-    rewards: "包賠金、專屬稱號、流水返券、現金紅包。"
-  };
-
-  Object.entries(detailSample).forEach(([name, data]) => {
-    const field = form.elements[name];
-    if (field) field.value = data;
-  });
-
   const outputList = document.querySelector("#outputList");
   outputList.innerHTML = [
     createOutputRow(
