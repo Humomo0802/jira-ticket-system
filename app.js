@@ -135,7 +135,8 @@ function selectedFiles() {
 function outputItems() {
   return [...form.querySelectorAll(".output-row")].map((row) => ({
     item: row.querySelector("[name='outputItem[]']")?.value.trim() || "",
-    size: row.querySelector("[name='outputSize[]']")?.value.trim() || ""
+    size: row.querySelector("[name='outputSize[]']")?.value.trim() || "",
+    copy: row.querySelector("[name='outputCopy[]']")?.value.trim() || ""
   }));
 }
 
@@ -143,16 +144,28 @@ function completedOutputItems() {
   return outputItems().filter((output) => output.item && output.size);
 }
 
-function createOutputRow(item = "", size = "") {
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function createOutputRow(item = "", size = "", copy = "") {
   return `
     <div class="output-row">
       <label>
         <span>項目</span>
-        <input name="outputItem[]" value="${item}" placeholder="例如：Banner、浮窗、直播間活動圖片" />
+        <input name="outputItem[]" value="${escapeHtml(item)}" placeholder="例如：Banner、浮窗、直播間活動圖片" />
       </label>
       <label>
         <span>尺寸</span>
-        <input name="outputSize[]" value="${size}" placeholder="例如：1920 x 720" />
+        <input name="outputSize[]" value="${escapeHtml(size)}" placeholder="例如：1920 x 720" />
+      </label>
+      <label class="output-copy-field">
+        <span>文字內容 / 備註</span>
+        <textarea name="outputCopy[]" rows="3" placeholder="填此項目要放的主標、副標、規則或特殊備註">${escapeHtml(copy)}</textarea>
       </label>
       <button class="remove-output-button" type="button" aria-label="移除項目">移除</button>
     </div>
@@ -162,7 +175,12 @@ function createOutputRow(item = "", size = "") {
 function outputItemsText() {
   const outputs = completedOutputItems();
   if (outputs.length === 0) return "";
-  return outputs.map((output, index) => `${index + 1}. ${output.item || "未填項目"}｜${output.size || "未填尺寸"}`).join("\n");
+  return outputs
+    .map((output, index) => {
+      const copy = output.copy ? `\n文字內容 / 備註：\n${output.copy}` : "";
+      return `${index + 1}. ${output.item || "未填項目"}｜${output.size || "未填尺寸"}${copy}`;
+    })
+    .join("\n\n");
 }
 
 function formatBytes(bytes) {
@@ -209,7 +227,7 @@ function renderScenarioFields() {
       <div class="output-heading">
         <div>
           <strong>預期產出</strong>
-          <p>每個項目請填名稱和尺寸。常見項目：${suggestionText}</p>
+          <p>每個項目請填名稱、尺寸，以及該項目要放的文字內容或備註。常見項目：${suggestionText}</p>
         </div>
         <button class="add-output-button" id="addOutputItem" type="button">新增項目</button>
       </div>
@@ -352,7 +370,7 @@ function missingFields() {
   ];
 
   const missing = required.filter(([name]) => !value(name)).map(([, label]) => label);
-  if (completedOutputItems().length === 0) missing.push("預期產出項目與尺寸");
+  if (completedOutputItems().length === 0) missing.push("預期產出項目、尺寸與文字內容");
   return missing;
 }
 
@@ -434,9 +452,21 @@ function fillSample() {
 
   const outputList = document.querySelector("#outputList");
   outputList.innerHTML = [
-    createOutputRow("朋友圈", "375 x 812"),
-    createOutputRow("封面", "165 x 95"),
-    createOutputRow("活動彈窗", "323 x 482")
+    createOutputRow(
+      "朋友圈",
+      "375 x 812",
+      "蔓蔓\n你投注我買單 x 包賠100%（主）\n專屬稱號 流水返券 現金紅包（小）\n2026-7-4 18:30 韓K聯 全北現代 - 江原FC\n2026-7-5 19:35 中超 上海申花 - 浙江隊"
+    ),
+    createOutputRow(
+      "封面",
+      "165 x 95",
+      "蔓蔓、夢兒\n你投注我買單 x 包賠100%（主）\n專屬稱號 流水返券 現金紅包（小）"
+    ),
+    createOutputRow(
+      "活動彈窗",
+      "323 x 482",
+      "蔓蔓、夢兒\n你投注我買單 x 包賠100%（主）\n專屬稱號、流水返券、現金紅包（小）\n\n活動內容：\n限本場賽事，當日累計充值≥100且首單有效投注≥100，會員根據首單投注的負盈利可獲得100元的包賠彩金。\n\n活動流程：\n進入直播間 → 點擊左邊活動浮標 → 點擊【我要報名】，進線找客服登記。\n\n活動規則：\n1. 活動僅限BB體育，當日累計充值≥100且首單有效投注≥100，負盈利僅對首單已結算並產生全輸結果來進行計算。\n2. 串關、對沖、提前結算、港賠0.75 / 歐賠1.75以下的首單投注將不列入活動計算。\n3. 獎勵於比賽結束48小時內審核派發，取款僅需3倍流水。\n4. 每位用戶僅限一個帳號參與本次活動，並只限領取一次獎勵。\n5. 為避免理解差異，平台保留本活動最終解釋權。"
+    )
   ].join("");
 
   updatePreview();
@@ -469,8 +499,8 @@ scenarioFields.addEventListener("click", (event) => {
     if (rows.length > 1) {
       event.target.closest(".output-row").remove();
     } else {
-      event.target.closest(".output-row").querySelectorAll("input").forEach((input) => {
-        input.value = "";
+      event.target.closest(".output-row").querySelectorAll("input, textarea").forEach((field) => {
+        field.value = "";
       });
     }
     updatePreview();

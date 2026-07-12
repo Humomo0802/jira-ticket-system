@@ -372,6 +372,10 @@ textarea:focus {
   margin: 0;
 }
 
+.output-copy-field {
+  grid-column: 1 / 3;
+}
+
 .add-output-button,
 .remove-output-button {
   min-height: 40px;
@@ -660,6 +664,10 @@ textarea:focus {
   .add-output-button,
   .remove-output-button {
     width: 100%;
+  }
+
+  .output-copy-field {
+    grid-column: auto;
   }
 
   .rail {
