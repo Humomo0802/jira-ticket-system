@@ -399,16 +399,16 @@ function fillSample() {
     department: "運營",
     platform: "BB",
     requestType: "新增",
-    title: "0613-14 樂享首單包賠",
+    title: "0704-05樂享-首單包賠",
     scenario: "直播間素材",
     quantity: "3",
     priority: "一般",
-    uiDueDate: "2026-06-11",
-    onlineDate: "2026-06-13",
-    summary: "需製作直播間活動素材，主視覺延續過往樂享活動風格，強化首單包賠與活動時間。",
-    assetLink: "https://drive.google.com/drive/folders/example",
-    legacyRef: "參考前一週樂享活動素材",
-    notes: "請先出 Banner 與直播間活動圖片。"
+    uiDueDate: "2026-06-30",
+    onlineDate: "2026-07-04",
+    summary: "製作 0704-05 樂享首單包賠活動素材，包含朋友圈、封面、活動彈窗。",
+    assetLink: "",
+    legacyRef: "參考 0704-05 樂享首單包賠原文檔",
+    notes: "請依照活動資訊製作朋友圈、封面與活動彈窗。"
   };
 
   Object.entries(sample).forEach(([name, data]) => {
@@ -418,13 +418,13 @@ function fillSample() {
 
   renderScenarioFields();
   const detailSample = {
-    activityName: "0613-14 樂享首單包賠",
-    activityPeriod: "06/13 - 06/14",
-    mainTitle: "首單包賠",
-    subTitle: "樂享活動限時開跑",
-    copy: "首單黑單免驚，最高包賠 888。",
-    rules: "活動期間完成指定投注即可參與，詳細規則依營運公告為準。",
-    rewards: "包賠金、現金券、限時獎勵。"
+    activityName: "0704-05樂享-首單包賠",
+    activityPeriod: "2026-07-04 18:30 韓K聯 全北現代 - 江原FC\n2026-07-05 19:35 中超 上海申花 - 浙江隊",
+    mainTitle: "你投注我買單 x 包賠100%",
+    subTitle: "專屬稱號、流水返券、現金紅包",
+    copy: "活動內容：\n限本場賽事，當日累計充值≥100且首單有效投注≥100，會員根據首單投注的負盈利可獲得100元的包賠彩金。\n\n活動流程：\n進入直播間 → 點擊左邊活動浮標 → 點擊【我要報名】，進線找客服登記。",
+    rules: "1. 活動僅限BB體育，當日累計充值≥100且首單有效投注≥100，負盈利僅對首單已結算並產生全輸結果來進行計算。\n2. 串關、對沖、提前結算、港賠0.75 / 歐賠1.75以下的首單投注將不列入活動計算。\n3. 獎勵於比賽結束48小時內審核派發，取款僅需3倍流水。\n4. 每位用戶僅限一個帳號參與本次活動，並只限領取一次獎勵。\n5. 為避免理解差異，平台保留本活動最終解釋權。",
+    rewards: "包賠金、專屬稱號、流水返券、現金紅包。"
   };
 
   Object.entries(detailSample).forEach(([name, data]) => {
@@ -434,9 +434,9 @@ function fillSample() {
 
   const outputList = document.querySelector("#outputList");
   outputList.innerHTML = [
-    createOutputRow("Banner", ""),
-    createOutputRow("浮窗", ""),
-    createOutputRow("直播間活動圖片", "")
+    createOutputRow("朋友圈", "375 x 812"),
+    createOutputRow("封面", "165 x 95"),
+    createOutputRow("活動彈窗", "323 x 482")
   ].join("");
 
   updatePreview();
