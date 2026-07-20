@@ -26,7 +26,7 @@
 
         <div class="rail-note">
           <strong>導入方式</strong>
-          <p>目前為前端原型。正式版送出時會呼叫後端 API，再由後端建立 Jira 工單。</p>
+          <p>送出後會由 Apps Script 建立 Jira 工單，並同步備份到 Google Sheet。</p>
         </div>
       </aside>
 
@@ -243,10 +243,10 @@
             <button class="primary-button" id="submitTicket" type="button">建立 Jira 工單</button>
 
             <div class="result-box" id="resultBox" hidden>
-              <span>建立成功</span>
-              <strong id="ticketKey">YY1-0000</strong>
-              <a id="ticketUrl" href="#" target="_blank" rel="noreferrer">打開 Jira</a>
-              <p id="backupStatus">備份狀態：待建立 Google Sheet 寫入權限</p>
+              <span>送出完成</span>
+              <strong id="ticketKey">已送出建立請求</strong>
+              <a id="ticketUrl" href="#" target="_blank" rel="noreferrer">前往 Jira 專案</a>
+              <p id="backupStatus">送出狀態：待送出</p>
             </div>
           </aside>
         </div>

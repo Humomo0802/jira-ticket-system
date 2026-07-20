@@ -232,14 +232,11 @@ function renderScenarioFields() {
 }
 
 function projectKey(platform, scenario) {
-  if (scenario === "活動" && value("needsDev") === "是") return "UD";
-  if (platform === "YY") return "YY1";
-  if (platform === "BB") return "BB1";
   return "UD";
 }
 
 function issueType(scenario) {
-  return scenario === "活動" && value("needsDev") === "是" ? "Story" : "Task";
+  return "Task";
 }
 
 function jiraSummary() {
@@ -302,6 +299,7 @@ function backupRecord(key, url) {
     submittedAt: new Date().toISOString(),
     jiraKey: key,
     jiraUrl: url,
+    assignee: "",
     project,
     issueType: type,
     summary: jiraSummary(),
@@ -317,22 +315,24 @@ function backupRecord(key, url) {
     onlineDate: value("onlineDate"),
     requestSummary: value("summary"),
     scenarioDetail: scenarioDescription(),
+    jiraDescription: jiraDescription(),
     assetLink: value("assetLink"),
     figmaLink: value("figmaLink"),
     relatedJira: value("relatedJira"),
     legacyRef: value("legacyRef"),
     selectedFiles: selectedFiles().map((file) => file.name).join("、"),
-    notes: value("notes")
+    notes: value("notes"),
+    requestStatus: "未處理"
   };
 }
 
 async function backupToGoogleSheet(record) {
   if (!GOOGLE_SHEET_BACKUP_URL) {
-    backupStatus.textContent = "備份狀態：待建立 Google Sheet 寫入權限";
+    backupStatus.textContent = "送出狀態：待建立 Apps Script 寫入權限";
     return;
   }
 
-  backupStatus.textContent = "備份狀態：送出中...";
+  backupStatus.textContent = "送出狀態：正在建立 Jira 工單並備份...";
 
   try {
     await fetch(GOOGLE_SHEET_BACKUP_URL, {
@@ -341,9 +341,9 @@ async function backupToGoogleSheet(record) {
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(record)
     });
-    backupStatus.textContent = "備份狀態：已送出到 Google Sheet，請到表格確認";
+    backupStatus.textContent = "送出狀態：已送出，請到 Jira 或 Google Sheet 確認單號";
   } catch (error) {
-    backupStatus.textContent = `備份狀態：送出失敗，${error.message}`;
+    backupStatus.textContent = `送出狀態：送出失敗，${error.message}`;
   }
 }
 
@@ -449,14 +449,11 @@ function fillSample() {
 }
 
 async function simulateSubmit() {
-  const project = projectKey(value("platform"), value("scenario"));
-  const number = Math.floor(1000 + Math.random() * 9000);
-  const key = `${project}-${number}`;
-  const url = `https://jira-by88168.atlassian.net/browse/${key}`;
-  ticketKey.textContent = key;
-  ticketUrl.href = url;
+  ticketKey.textContent = "已送出建立請求";
+  ticketUrl.href = "https://mgbilibili.atlassian.net/jira/software/c/projects/UD/boards/21";
+  ticketUrl.textContent = "前往 Jira 專案";
   resultBox.hidden = false;
-  await backupToGoogleSheet(backupRecord(key, url));
+  await backupToGoogleSheet(backupRecord("", ""));
 }
 
 scenarioSelect.addEventListener("change", () => {
