@@ -49,7 +49,6 @@ const scenarioConfigs = {
   },
   "僅活動配置圖": {
     fields: [
-      ["activityName", "活動名稱", "input", "例如：好友邀請加碼"],
       ["configList", "配置圖檔名清單", "textarea", "逐行列出檔名或版位"],
       ["version", "需套用版本", "input", "版本一 / 版本二 / 都要"],
       ["sizeSpec", "尺寸規範", "textarea", "依照哪份規範或列出尺寸"],
