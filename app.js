@@ -1,6 +1,14 @@
 const scenarioConfigs = {
   "直播間素材": {
-    fields: [],
+    fields: [
+      ["activityName", "活動名稱", "input", "例如：樂享首單包賠"],
+      ["activityPeriod", "活動期間", "input", "例如：06/13 - 06/14"],
+      ["mainTitle", "主標題", "input", "活動主標"],
+      ["subTitle", "副標題", "input", "活動副標"],
+      ["copy", "活動文案", "textarea", "請貼上要放進素材的文案"],
+      ["rules", "活動規則", "textarea", "參與方式、限制、派獎規則"],
+      ["rewards", "獎勵內容", "textarea", "獎項、金額、名額"]
+    ],
     checks: ["Banner", "浮窗", "活動彈窗", "直播間活動圖片", "其他"]
   },
   "代理": {
@@ -115,8 +123,6 @@ const referenceFiles = document.querySelector("#referenceFiles");
 const fileList = document.querySelector("#fileList");
 const backupStatus = document.querySelector("#backupStatus");
 const GOOGLE_SHEET_BACKUP_URL = "https://script.google.com/macros/s/AKfycbxwD97TG6Jc3yDC-Ps7XqfSaK-ngzG19oKl8yHd466Z_-ZtzBi55ttOQ8SlzwJlgfAZIA/exec";
-let isSubmitting = false;
-let hasSubmitted = false;
 
 function value(name) {
   return new FormData(form).get(name)?.toString().trim() || "";
@@ -234,11 +240,14 @@ function renderScenarioFields() {
 }
 
 function projectKey(platform, scenario) {
+  if (scenario === "活動" && value("needsDev") === "是") return "UD";
+  if (platform === "YY") return "YY1";
+  if (platform === "BB") return "BB1";
   return "UD";
 }
 
 function issueType(scenario) {
-  return "Task";
+  return scenario === "活動" && value("needsDev") === "是" ? "Story" : "Task";
 }
 
 function jiraSummary() {
@@ -301,7 +310,6 @@ function backupRecord(key, url) {
     submittedAt: new Date().toISOString(),
     jiraKey: key,
     jiraUrl: url,
-    assignee: "",
     project,
     issueType: type,
     summary: jiraSummary(),
@@ -316,25 +324,24 @@ function backupRecord(key, url) {
     uiDueDate: value("uiDueDate"),
     onlineDate: value("onlineDate"),
     requestSummary: value("summary"),
+    outputItems: outputItemsText(),
     scenarioDetail: scenarioDescription(),
-    jiraDescription: jiraDescription(),
     assetLink: value("assetLink"),
     figmaLink: value("figmaLink"),
     relatedJira: value("relatedJira"),
     legacyRef: value("legacyRef"),
     selectedFiles: selectedFiles().map((file) => file.name).join("、"),
-    notes: value("notes"),
-    requestStatus: "未處理"
+    notes: value("notes")
   };
 }
 
 async function backupToGoogleSheet(record) {
   if (!GOOGLE_SHEET_BACKUP_URL) {
-    backupStatus.textContent = "送出狀態：待建立 Apps Script 寫入權限";
-    return false;
+    backupStatus.textContent = "備份狀態：待建立 Google Sheet 寫入權限";
+    return;
   }
 
-  backupStatus.textContent = "送出狀態：正在建立 Jira 工單並備份...";
+  backupStatus.textContent = "備份狀態：送出中...";
 
   try {
     await fetch(GOOGLE_SHEET_BACKUP_URL, {
@@ -343,11 +350,9 @@ async function backupToGoogleSheet(record) {
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(record)
     });
-    backupStatus.textContent = "送出狀態：已送出，請到 Jira 或 Google Sheet 確認單號";
-    return true;
+    backupStatus.textContent = "備份狀態：已送出到 Google Sheet，請到表格確認";
   } catch (error) {
-    backupStatus.textContent = `送出狀態：送出失敗，${error.message}`;
-    return false;
+    backupStatus.textContent = `備份狀態：送出失敗，${error.message}`;
   }
 }
 
@@ -402,11 +407,8 @@ function updatePreview() {
     });
   }
 
-  submitButton.disabled = missing.length > 0 || isSubmitting || hasSubmitted;
-  submitButton.textContent = hasSubmitted ? "已建立，請勿重複送出" : "建立 Jira 工單";
-  if (!hasSubmitted && !isSubmitting) {
-    resultBox.hidden = true;
-  }
+  submitButton.disabled = missing.length > 0;
+  resultBox.hidden = true;
 }
 
 function fillSample() {
@@ -433,6 +435,21 @@ function fillSample() {
   });
 
   renderScenarioFields();
+  const detailSample = {
+    activityName: "0704-05樂享-首單包賠",
+    activityPeriod: "2026-07-04 18:30 韓K聯 全北現代 - 江原FC\n2026-07-05 19:35 中超 上海申花 - 浙江隊",
+    mainTitle: "你投注我買單 x 包賠100%",
+    subTitle: "專屬稱號、流水返券、現金紅包",
+    copy: "活動內容：\n限本場賽事，當日累計充值≥100且首單有效投注≥100，會員根據首單投注的負盈利可獲得100元的包賠彩金。\n\n活動流程：\n進入直播間 → 點擊左邊活動浮標 → 點擊【我要報名】，進線找客服登記。",
+    rules: "1. 活動僅限BB體育，當日累計充值≥100且首單有效投注≥100，負盈利僅對首單已結算並產生全輸結果來進行計算。\n2. 串關、對沖、提前結算、港賠0.75 / 歐賠1.75以下的首單投注將不列入活動計算。\n3. 獎勵於比賽結束48小時內審核派發，取款僅需3倍流水。\n4. 每位用戶僅限一個帳號參與本次活動，並只限領取一次獎勵。\n5. 為避免理解差異，平台保留本活動最終解釋權。",
+    rewards: "包賠金、專屬稱號、流水返券、現金紅包。"
+  };
+
+  Object.entries(detailSample).forEach(([name, data]) => {
+    const field = form.elements[name];
+    if (field) field.value = data;
+  });
+
   const outputList = document.querySelector("#outputList");
   outputList.innerHTML = [
     createOutputRow(
@@ -456,27 +473,14 @@ function fillSample() {
 }
 
 async function simulateSubmit() {
-  if (isSubmitting || hasSubmitted) return;
-
-  isSubmitting = true;
-  submitButton.disabled = true;
-  submitButton.textContent = "建立中...";
-  ticketKey.textContent = "已送出建立請求";
-  ticketUrl.href = "https://mgbilibili.atlassian.net/jira/software/c/projects/UD/boards/21";
-  ticketUrl.textContent = "前往 Jira 專案";
+  const project = projectKey(value("platform"), value("scenario"));
+  const number = Math.floor(1000 + Math.random() * 9000);
+  const key = `${project}-${number}`;
+  const url = `https://jira-by88168.atlassian.net/browse/${key}`;
+  ticketKey.textContent = key;
+  ticketUrl.href = url;
   resultBox.hidden = false;
-  const success = await backupToGoogleSheet(backupRecord("", ""));
-
-  isSubmitting = false;
-  if (success) {
-    hasSubmitted = true;
-    submitButton.disabled = true;
-    submitButton.textContent = "已建立，請勿重複送出";
-    window.alert("建立成功");
-  } else {
-    submitButton.disabled = false;
-    submitButton.textContent = "重新建立 Jira 工單";
-  }
+  await backupToGoogleSheet(backupRecord(key, url));
 }
 
 scenarioSelect.addEventListener("change", () => {
@@ -486,17 +490,11 @@ scenarioSelect.addEventListener("change", () => {
 
 scenarioFields.addEventListener("click", (event) => {
   if (event.target.closest("#addOutputItem")) {
-    if (hasSubmitted) {
-      hasSubmitted = false;
-    }
     document.querySelector("#outputList").insertAdjacentHTML("beforeend", createOutputRow());
     updatePreview();
   }
 
   if (event.target.closest(".remove-output-button")) {
-    if (hasSubmitted) {
-      hasSubmitted = false;
-    }
     const rows = [...document.querySelectorAll(".output-row")];
     if (rows.length > 1) {
       event.target.closest(".output-row").remove();
@@ -509,26 +507,14 @@ scenarioFields.addEventListener("click", (event) => {
   }
 });
 
-function handleFormEdit() {
-  if (hasSubmitted) {
-    hasSubmitted = false;
-  }
-  updatePreview();
-}
-
-form.addEventListener("input", handleFormEdit);
-form.addEventListener("change", handleFormEdit);
+form.addEventListener("input", updatePreview);
+form.addEventListener("change", updatePreview);
 referenceFiles.addEventListener("change", () => {
-  if (hasSubmitted) {
-    hasSubmitted = false;
-  }
   renderFileList();
   updatePreview();
 });
 document.querySelector("#loadSample").addEventListener("click", fillSample);
 document.querySelector("#resetForm").addEventListener("click", () => {
-  hasSubmitted = false;
-  isSubmitting = false;
   form.reset();
   renderFileList();
   renderScenarioFields();
