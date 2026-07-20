@@ -288,14 +288,17 @@ ${value("notes")}`;
 function backupRecord(key, url) {
   const project = projectKey(value("platform"), value("scenario"));
   const type = issueType(value("scenario"));
-  return {
+  const summary = jiraSummary();
+  const detail = scenarioDescription();
+  const selectedFileNames = selectedFiles().map((file) => file.name).join("、");
+  const record = {
     submittedAt: new Date().toISOString(),
     jiraKey: key,
     jiraUrl: url,
     assignee: "未指派",
     project,
     issueType: type,
-    summary: jiraSummary(),
+    summary,
     requester: value("requester"),
     department: value("department"),
     platform: value("platform"),
@@ -307,16 +310,47 @@ function backupRecord(key, url) {
     uiDueDate: value("uiDueDate"),
     onlineDate: value("onlineDate"),
     requestSummary: value("summary"),
-    scenarioDetail: scenarioDescription(),
+    scenarioDetail: detail,
     jiraDescription: jiraDescription(),
     assetLink: value("assetLink"),
     figmaLink: value("figmaLink"),
     relatedJira: value("relatedJira"),
     legacyRef: value("legacyRef"),
-    selectedFiles: selectedFiles().map((file) => file.name).join("、"),
+    selectedFiles: selectedFileNames,
     notes: value("notes"),
     requestStatus: "未處理"
   };
+
+  record.sheetRecord = {
+    建立時間: record.submittedAt,
+    Jira單號: record.jiraKey,
+    Jira連結: record.jiraUrl,
+    負責人: "未指派",
+    Jira專案: project,
+    工單類型: type,
+    Jira標題: summary,
+    需求人: record.requester,
+    單位: record.department,
+    平台: record.platform,
+    需求類型: record.requestType,
+    需求場景: record.scenario,
+    優先級: record.priority,
+    活動名稱: record.title,
+    張數: record.quantity,
+    交件日期: record.uiDueDate,
+    上線日期: record.onlineDate,
+    需求說明: record.requestSummary,
+    場景明細: detail,
+    素材或附件: record.assetLink,
+    Figma: record.figmaLink,
+    相關Jira: record.relatedJira,
+    舊圖或舊活動: record.legacyRef,
+    已選參考檔案: selectedFileNames,
+    備註: record.notes,
+    需求狀態: "未處理"
+  };
+
+  return record;
 }
 
 async function backupToGoogleSheet(record) {
