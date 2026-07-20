@@ -115,6 +115,8 @@ const referenceFiles = document.querySelector("#referenceFiles");
 const fileList = document.querySelector("#fileList");
 const backupStatus = document.querySelector("#backupStatus");
 const GOOGLE_SHEET_BACKUP_URL = "https://script.google.com/macros/s/AKfycbxwD97TG6Jc3yDC-Ps7XqfSaK-ngzG19oKl8yHd466Z_-ZtzBi55ttOQ8SlzwJlgfAZIA/exec";
+let isSubmitting = false;
+let hasSubmitted = false;
 
 function value(name) {
   return new FormData(form).get(name)?.toString().trim() || "";
@@ -329,7 +331,7 @@ function backupRecord(key, url) {
 async function backupToGoogleSheet(record) {
   if (!GOOGLE_SHEET_BACKUP_URL) {
     backupStatus.textContent = "送出狀態：待建立 Apps Script 寫入權限";
-    return;
+    return false;
   }
 
   backupStatus.textContent = "送出狀態：正在建立 Jira 工單並備份...";
@@ -342,8 +344,10 @@ async function backupToGoogleSheet(record) {
       body: JSON.stringify(record)
     });
     backupStatus.textContent = "送出狀態：已送出，請到 Jira 或 Google Sheet 確認單號";
+    return true;
   } catch (error) {
     backupStatus.textContent = `送出狀態：送出失敗，${error.message}`;
+    return false;
   }
 }
 
@@ -398,8 +402,11 @@ function updatePreview() {
     });
   }
 
-  submitButton.disabled = missing.length > 0;
-  resultBox.hidden = true;
+  submitButton.disabled = missing.length > 0 || isSubmitting || hasSubmitted;
+  submitButton.textContent = hasSubmitted ? "已建立，請勿重複送出" : "建立 Jira 工單";
+  if (!hasSubmitted && !isSubmitting) {
+    resultBox.hidden = true;
+  }
 }
 
 function fillSample() {
@@ -449,11 +456,27 @@ function fillSample() {
 }
 
 async function simulateSubmit() {
+  if (isSubmitting || hasSubmitted) return;
+
+  isSubmitting = true;
+  submitButton.disabled = true;
+  submitButton.textContent = "建立中...";
   ticketKey.textContent = "已送出建立請求";
   ticketUrl.href = "https://mgbilibili.atlassian.net/jira/software/c/projects/UD/boards/21";
   ticketUrl.textContent = "前往 Jira 專案";
   resultBox.hidden = false;
-  await backupToGoogleSheet(backupRecord("", ""));
+  const success = await backupToGoogleSheet(backupRecord("", ""));
+
+  isSubmitting = false;
+  if (success) {
+    hasSubmitted = true;
+    submitButton.disabled = true;
+    submitButton.textContent = "已建立，請勿重複送出";
+    window.alert("建立成功");
+  } else {
+    submitButton.disabled = false;
+    submitButton.textContent = "重新建立 Jira 工單";
+  }
 }
 
 scenarioSelect.addEventListener("change", () => {
@@ -463,11 +486,17 @@ scenarioSelect.addEventListener("change", () => {
 
 scenarioFields.addEventListener("click", (event) => {
   if (event.target.closest("#addOutputItem")) {
+    if (hasSubmitted) {
+      hasSubmitted = false;
+    }
     document.querySelector("#outputList").insertAdjacentHTML("beforeend", createOutputRow());
     updatePreview();
   }
 
   if (event.target.closest(".remove-output-button")) {
+    if (hasSubmitted) {
+      hasSubmitted = false;
+    }
     const rows = [...document.querySelectorAll(".output-row")];
     if (rows.length > 1) {
       event.target.closest(".output-row").remove();
@@ -480,14 +509,26 @@ scenarioFields.addEventListener("click", (event) => {
   }
 });
 
-form.addEventListener("input", updatePreview);
-form.addEventListener("change", updatePreview);
+function handleFormEdit() {
+  if (hasSubmitted) {
+    hasSubmitted = false;
+  }
+  updatePreview();
+}
+
+form.addEventListener("input", handleFormEdit);
+form.addEventListener("change", handleFormEdit);
 referenceFiles.addEventListener("change", () => {
+  if (hasSubmitted) {
+    hasSubmitted = false;
+  }
   renderFileList();
   updatePreview();
 });
 document.querySelector("#loadSample").addEventListener("click", fillSample);
 document.querySelector("#resetForm").addEventListener("click", () => {
+  hasSubmitted = false;
+  isSubmitting = false;
   form.reset();
   renderFileList();
   renderScenarioFields();
